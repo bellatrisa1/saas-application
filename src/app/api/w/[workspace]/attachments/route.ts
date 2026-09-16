@@ -14,9 +14,16 @@ export async function POST(request: Request, { params }: Context) {
     if (Number(request.headers.get("content-length") ?? 0) > 5300000)
       throw new AppError(413, "Maximum upload size is 5 MB");
     const bytesBody = await limitedBody(request, 5300000);
-    const form = await new Response(Buffer.from(bytesBody), {
-      headers: { "Content-Type": request.headers.get("content-type") ?? "" },
-    }).formData();
+    let form: FormData;
+    try {
+      form = await new Response(Buffer.from(bytesBody), {
+        headers: { "Content-Type": request.headers.get("content-type") ?? "" },
+      }).formData();
+    } catch (error) {
+      if (error instanceof TypeError)
+        throw new AppError(400, "Invalid multipart upload");
+      throw error;
+    }
     const id = z.uuid().parse(form.get("issueId"));
     const file = form.get("file");
     if (!(file instanceof File) || file.size > 5242880 || !file.size)

@@ -17,10 +17,19 @@ export function Modal({
     const element = ref.current;
     const focusable = () =>
       element?.querySelectorAll<HTMLElement>(
-        'button,input,select,textarea,a[href],[tabindex="0"]',
+        'button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]',
       );
-    focusable()?.[0]?.focus();
+    (
+      element?.querySelector<HTMLElement>(
+        "input:not(:disabled),textarea:not(:disabled),select:not(:disabled)",
+      ) ?? focusable()?.[0]
+    )?.focus();
     function key(e: KeyboardEvent) {
+      // A command palette can sit above an issue editor; only the top dialog handles keys.
+      const dialogs = document.querySelectorAll(
+        '[role="dialog"][aria-modal="true"]',
+      );
+      if (dialogs[dialogs.length - 1] !== element) return;
       if (e.key === "Escape") onClose();
       if (e.key === "Tab") {
         const nodes = focusable();

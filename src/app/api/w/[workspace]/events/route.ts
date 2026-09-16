@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { digest } from "@/server/password";
 import { pool, transaction } from "@/server/db";
 import { access } from "@/server/access";
+import { eventsAfter } from "@/server/events";
 import { respond } from "@/server/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,10 +68,7 @@ export async function GET(
             ).rows[0].id;
             send("event: ready\ndata: {}\n\n");
           } else {
-            const { rows } = await pool.query<{ id: string; kind: string }>(
-              "SELECT id::text,kind FROM events WHERE workspace_id=$1 AND id>$2 ORDER BY id LIMIT 100",
-              [workspace, cursor],
-            );
+            const { rows } = await eventsAfter(pool, workspace, cursor!);
             for (const row of rows) {
               send(
                 `id: ${row.id}\nevent: change\ndata: ${JSON.stringify({ kind: row.kind })}\n\n`,

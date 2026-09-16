@@ -178,6 +178,7 @@ function App({ user }: { user: User }) {
         projects={projects.data ?? []}
         wid={wid}
         sidebar={sidebar}
+        onClose={() => setSidebar(false)}
         section={section}
         project={project}
         unread={unread}

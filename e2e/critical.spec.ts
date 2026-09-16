@@ -169,3 +169,82 @@ test("critical lifecycle, permissions, and realtime between sessions", async ({
       .getByRole("button", { name: "Ship the first release", exact: true }),
   ).toBeVisible();
 });
+
+test("editing preserves assignees and drafts; nested palette closes independently", async ({
+  page,
+}) => {
+  const email = `draft-${crypto.randomUUID()}@test.local`;
+  const headers = { Origin: "http://localhost:3000" };
+  const register = await page.request.post("/api/auth/register", {
+    headers,
+    data: { email, name: "Draft tester", password: "Draft-password-2026!" },
+  });
+  expect(register.status()).toBe(200);
+  const workspace = (
+    await (
+      await page.request.post("/api/workspaces", {
+        headers,
+        data: { name: "Draft test" },
+      })
+    ).json()
+  ).id;
+  const project = (
+    await (
+      await page.request.post(`/api/w/${workspace}/projects`, {
+        headers,
+        data: { name: "Draft project", key: "DFT" },
+      })
+    ).json()
+  ).id;
+  const owner = (
+    await (await page.request.get(`/api/w/${workspace}/members`)).json()
+  )[0].user_id;
+  const issue = await (
+    await page.request.post(`/api/w/${workspace}/issues`, {
+      headers,
+      data: { projectId: project, title: "Original draft", assigneeId: owner },
+    })
+  ).json();
+  await page.goto(`/?workspace=${workspace}&issue=${issue.id}`);
+  await expect(page.getByLabel("Issue title")).toHaveValue("Original draft");
+  await page.getByLabel("Search members").fill("no-matching-person");
+  await expect(
+    page.getByRole("combobox", { name: "Assignee", exact: true }),
+  ).toHaveValue(owner);
+  await page.keyboard.press("Control+k");
+  await expect(
+    page.getByRole("dialog", { name: "Command menu" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Search commands" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Command menu" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByLabel("Issue title")).toBeVisible();
+  await page.getByLabel("Issue title").fill("My unsaved draft");
+  const remote = await page.request.patch(
+    `/api/w/${workspace}/issues/${issue.id}`,
+    { headers, data: { title: "Remote edit", version: 1 } },
+  );
+  expect(remote.status()).toBe(200);
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "This issue changed" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Issue title")).toHaveValue("My unsaved draft");
+  expect(
+    (
+      await (
+        await page.request.get(`/api/w/${workspace}/issues/${issue.id}`)
+      ).json()
+    ).title,
+  ).toBe("Remote edit");
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Hide sidebar" }).click();
+  await expect(page.getByRole("complementary")).toBeHidden();
+  await page.getByRole("button", { name: "Toggle sidebar" }).click();
+  await expect(page.getByRole("complementary")).toBeVisible();
+});

@@ -30,11 +30,11 @@ npm run db:migrate
 For a production build:
 
 ```sh
-npm run build -- --webpack
+npm run build
 npm start
 ```
 
-Run behind HTTPS: production cookies are Secure. Supply `DATABASE_URL` and the canonical HTTPS `APP_ORIGIN`. Use a long-running Node service with SSE support; configure proxies to disable response buffering for event streams. The webpack build is verified; the default Turbopack build is also available via `npm run build`.
+Run behind HTTPS: production cookies are Secure. Supply `DATABASE_URL` and the canonical HTTPS `APP_ORIGIN`. Use a long-running Node service with SSE support; configure proxies to disable response buffering for event streams. The default build uses the verified webpack compiler. `npm run build:turbo` is available for environments that allow Turbopack’s SCSS worker to bind local ports; it failed that permission check in the development sandbox.
 
 ## Product capabilities
 
@@ -139,3 +139,7 @@ This is a working portfolio implementation, not a claim of independently audited
 - SSE favors portability over high fanout efficiency; benchmark before deploying many simultaneous connections. Attachments increase database backup size.
 
 These trade-offs are concrete interview topics: transaction isolation, composite tenant constraints, optimistic concurrency, cache ownership, cursor pagination, and reliable event delivery.
+
+## Verification report
+
+See [the full check report](docs/verification.md) for executed checks, defects fixed, and remaining production limitations.

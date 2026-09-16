@@ -205,7 +205,11 @@ function Lane({ status, ...props }: Props & { status: Status }) {
   );
 }
 export function Board(props: Props) {
-  const mutation = useIssueMutation(props.workspace);
+  const mutation = useIssueMutation(
+    props.workspace,
+    props.query,
+    props.project,
+  );
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor),

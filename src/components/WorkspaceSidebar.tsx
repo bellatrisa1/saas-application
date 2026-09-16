@@ -25,6 +25,7 @@ type Props = {
   projects: Project[];
   wid: string;
   sidebar: boolean;
+  onClose: () => void;
   section: string;
   project: string;
   unread: { data?: { unread: number } };
@@ -41,6 +42,7 @@ export function WorkspaceSidebar({
   projects,
   wid,
   sidebar,
+  onClose,
   section,
   project,
   unread,
@@ -54,6 +56,9 @@ export function WorkspaceSidebar({
   const queryClient = useQueryClient();
   return (
     <aside className={`${s.sidebar} ${!sidebar ? s.collapsed : ""}`}>
+      <button className={s.mobileClose} onClick={onClose}>
+        Hide sidebar
+      </button>
       <div className={s.workspaceSwitcher}>
         <span className={s.workspaceLogo}>O</span>
         <select

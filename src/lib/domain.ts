@@ -1,10 +1,16 @@
-import { z } from 'zod';
-export const roles = ['owner', 'admin', 'member', 'viewer'] as const;
+import { z } from "zod";
+export const roles = ["owner", "admin", "member", "viewer"] as const;
 export type Role = (typeof roles)[number];
-export const statuses = ['backlog', 'todo', 'in-progress', 'in-review', 'done'] as const;
-export const priorities = ['urgent', 'high', 'medium', 'low', 'none'] as const;
+export const statuses = [
+  "backlog",
+  "todo",
+  "in-progress",
+  "in-review",
+  "done",
+] as const;
+export const priorities = ["urgent", "high", "medium", "low", "none"] as const;
 export type Status = (typeof statuses)[number];
-export function can(role: Role, action: 'read' | 'issue' | 'manage' | 'owner') {
+export function can(role: Role, action: "read" | "issue" | "manage" | "owner") {
   return (
     roles.includes(role) &&
     roles.indexOf(role) <= { read: 3, issue: 2, manage: 1, owner: 0 }[action]
@@ -20,10 +26,10 @@ export const credentials = z.object({
 });
 export const issueInput = z.object({
   title: z.string().trim().min(1).max(240),
-  description: z.string().max(20000).default(''),
+  description: z.string().max(20000).default(""),
   projectId: z.uuid(),
-  status: z.enum(statuses).default('todo'),
-  priority: z.enum(priorities).default('medium'),
+  status: z.enum(statuses).default("todo"),
+  priority: z.enum(priorities).default("medium"),
   assigneeId: z.uuid().nullable().default(null),
   dueDate: z.iso.date().nullable().default(null),
   labels: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
@@ -76,7 +82,7 @@ export class AppError extends Error {
   constructor(
     public status: number,
     message: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
   }
@@ -90,32 +96,36 @@ export type Search = {
   due?: string;
 };
 export function parseSearch(input: string): Search {
-  const result: Search = { text: '' };
+  const result: Search = { text: "" };
   const words: string[] = [];
   for (const match of input.matchAll(/(?:[^\s"]+|"[^"]*")+/g)) {
     const token = match[0];
-    const separator = token.indexOf(':');
+    const separator = token.indexOf(":");
     if (separator < 0) {
-      words.push(token.replaceAll('"', ''));
+      words.push(token.replaceAll('"', ""));
       continue;
     }
     const key = token.slice(0, separator);
-    const value = token.slice(separator + 1).replaceAll('"', '');
-    if (key === 'status') {
-      if (!statuses.includes(value as Status)) throw new AppError(422, 'Unknown status filter');
+    const value = token.slice(separator + 1).replaceAll('"', "");
+    if (key === "status") {
+      if (!statuses.includes(value as Status))
+        throw new AppError(422, "Unknown status filter");
       result.status = value;
-    } else if (key === 'priority') {
+    } else if (key === "priority") {
       if (!priorities.includes(value as (typeof priorities)[number]))
-        throw new AppError(422, 'Unknown priority filter');
+        throw new AppError(422, "Unknown priority filter");
       result.priority = value;
-    } else if (key === 'assignee' || key === 'label') {
+    } else if (key === "assignee" || key === "label") {
       result[key] = value;
-    } else if (key === 'due') {
-      if (!/^<\d{4}-\d{2}-\d{2}$/.test(value) || !z.iso.date().safeParse(value.slice(1)).success)
-        throw new AppError(422, 'Use due:<YYYY-MM-DD');
+    } else if (key === "due") {
+      if (
+        !/^<\d{4}-\d{2}-\d{2}$/.test(value) ||
+        !z.iso.date().safeParse(value.slice(1)).success
+      )
+        throw new AppError(422, "Use due:<YYYY-MM-DD");
       result.due = value.slice(1);
     } else throw new AppError(422, `Unknown filter: ${key}`);
   }
-  result.text = words.join(' ');
+  result.text = words.join(" ");
   return result;
 }

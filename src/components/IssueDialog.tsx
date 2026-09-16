@@ -29,6 +29,8 @@ export function MemberSelect({
   name?: string;
 }) {
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(defaultValue);
+  const [selectedName, setSelectedName] = useState("Current assignee");
   const members = useQuery({
     queryKey: ["workspace", workspace, "members", search],
     queryFn: () =>
@@ -45,12 +47,21 @@ export function MemberSelect({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <select aria-label="Assignee" name={name} defaultValue={defaultValue}>
+      <select
+        aria-label="Assignee"
+        name={name}
+        value={selected}
+        onChange={(e) => {
+          setSelected(e.target.value);
+          setSelectedName(
+            e.target.selectedOptions[0]?.text ?? "Current assignee",
+          );
+        }}
+      >
         <option value="">Unassigned</option>
-        {defaultValue &&
-          !members.data?.some((m) => m.user_id === defaultValue) && (
-            <option value={defaultValue}>Current assignee</option>
-          )}
+        {selected && !members.data?.some((m) => m.user_id === selected) && (
+          <option value={selected}>{selectedName}</option>
+        )}
         {members.data?.map((m) => (
           <option key={m.user_id} value={m.user_id}>
             {m.name}

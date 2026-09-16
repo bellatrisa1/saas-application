@@ -20,13 +20,19 @@ export function useWorkspaceData(workspace: string) {
   useEffect(() => {
     if (!workspace) return;
     const stream = new EventSource(`/api/w/${workspace}/events`);
+    let timer: ReturnType<typeof setTimeout>;
     const refresh = () => {
+      if (
+        client.isMutating({ mutationKey: ["workspace", workspace, "issues"] })
+      ) {
+        timer = setTimeout(refresh, 100);
+        return;
+      }
       setConnection("Live");
       void client.invalidateQueries({ queryKey: ["workspace", workspace] });
       void client.invalidateQueries({ queryKey: ["workspaces"] });
     };
     stream.addEventListener("ready", refresh);
-    let timer: ReturnType<typeof setTimeout>;
     stream.addEventListener("change", () => {
       clearTimeout(timer);
       timer = setTimeout(refresh, 100);
@@ -51,9 +57,14 @@ export function useWorkspaces() {
     queryFn: () => api<Workspace[]>("/api/workspaces"),
   });
 }
-export function useIssueMutation(workspace: string) {
+export function useIssueMutation(
+  workspace: string,
+  query: string,
+  project: string,
+) {
   const client = useQueryClient();
   return useMutation({
+    mutationKey: ["workspace", workspace, "issues"],
     scope: { id: `issue-update-${workspace}` },
     mutationFn: ({ issue, patch }: { issue: Issue; patch: Partial<Issue> }) =>
       api<Issue>(`/api/w/${workspace}/issues/${issue.id}`, "PATCH", {
@@ -63,10 +74,10 @@ export function useIssueMutation(workspace: string) {
       }),
     onMutate: async ({ issue, patch }) => {
       await client.cancelQueries({
-        queryKey: ["workspace", workspace, "issues"],
+        queryKey: ["workspace", workspace, "issues", query, project],
       });
       const snapshots = client.getQueriesData<InfiniteData<IssuePage>>({
-        queryKey: ["workspace", workspace, "issues"],
+        queryKey: ["workspace", workspace, "issues", query, project],
       });
       for (const [key, old] of snapshots) {
         if (!old) continue;

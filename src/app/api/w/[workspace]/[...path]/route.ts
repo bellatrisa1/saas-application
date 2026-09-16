@@ -13,6 +13,18 @@ export async function GET(request: Request, context: Context) {
     const { workspace, path } = await context.params;
     z.uuid().parse(workspace);
     const [resource, id, child] = path;
+    const isIssue =
+      resource === "issues" &&
+      path.length <= 3 &&
+      (!child || ["comments", "watchers", "attachments"].includes(child));
+    const isProjectMembers =
+      resource === "project-members" && path.length === 2;
+    const isCollection =
+      ["projects", "members", "activity", "notifications"].includes(resource) &&
+      path.length === 1;
+    if (!isIssue && !isProjectMembers && !isCollection)
+      throw new AppError(404, "Resource not found");
+
     const p = new URL(request.url).searchParams;
     return transaction(async (db) => {
       await access(db, workspace, user.id);
@@ -120,6 +132,22 @@ async function mutate(request: Request, context: Context) {
     const { workspace, path } = await context.params;
     z.uuid().parse(workspace);
     const [resource, id, child] = path;
+    const root =
+      ["settings", "invite", "member", "projects", "notifications"].includes(
+        resource,
+      ) && path.length === 1;
+    const issueRoot = resource === "issues" && path.length === 1;
+    const issueItem = resource === "issues" && path.length === 2;
+    const issueChild =
+      resource === "issues" &&
+      path.length === 3 &&
+      ["comments", "watchers"].includes(child);
+    if (!root && !issueRoot && !issueItem && !issueChild)
+      throw new AppError(404, "Resource not found");
+    const allowed = issueItem ? ["PATCH", "DELETE"] : ["POST"];
+    if (!allowed.includes(request.method))
+      throw new AppError(405, "Method not allowed for this resource");
+
     const data = await body(request);
     if (
       resource === "settings" ||

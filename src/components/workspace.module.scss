@@ -1062,3 +1062,14 @@
     display: none;
   }
 }
+
+.app .mobileClose {
+  display: none;
+}
+@media (max-width: 700px) {
+  .app .mobileClose {
+    display: inline-flex;
+    margin-bottom: 16px;
+    justify-content: center;
+  }
+}
