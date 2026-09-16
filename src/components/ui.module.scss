@@ -1,0 +1,125 @@
+.primary {
+  background: #7865db;
+  border-color: #9380f0;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px #0003;
+  &:hover {
+    background: #8a76ef;
+  }
+}
+.error {
+  padding: 12px;
+  border: 1px solid #a44e5c;
+  background: #48252d;
+  color: #ffbcc6;
+  border-radius: 7px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: #9699a8;
+  h2 {
+    color: #e0e1e7;
+    font-size: 20px;
+  }
+  p {
+    line-height: 1.7;
+  }
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #0009;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 20px 30px;
+  overflow: auto;
+}
+.modal {
+  background: #1a1b21;
+  border: 1px solid #3a3b46;
+  border-radius: 12px;
+  width: 580px;
+  max-width: 100%;
+  box-shadow: 0 24px 100px #0008;
+  padding: 24px;
+  max-height: 84vh;
+  overflow: auto;
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+    button {
+      border: 0;
+      background: none;
+      padding: 4px;
+    }
+  }
+}
+.form {
+  display: grid;
+  gap: 18px;
+  input,
+  textarea,
+  select {
+    width: 100%;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #30313b;
+  }
+}
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 50% 0, #3a2b6040, transparent 65%);
+  padding: 30px;
+  section {
+    width: 390px;
+    max-width: 100%;
+  }
+  h1 {
+    font-size: 30px;
+    letter-spacing: -1px;
+    margin: 32px 0 10px;
+  }
+  p {
+    color: #9395a4;
+    margin-bottom: 30px;
+  }
+  a {
+    color: #b6a3ff;
+  }
+  .brand {
+    font-size: 23px;
+    letter-spacing: -1px;
+    font-weight: 700;
+    color: #c4b5fd;
+  }
+  footer {
+    text-align: center;
+    margin-top: 24px;
+    color: #9294a1;
+    font-size: 13px;
+  }
+}
