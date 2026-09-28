@@ -1,145 +1,964 @@
 # Orbit
 
-A focused, multi-tenant project management application inspired by Linear and Jira. Built with Next.js App Router, TypeScript, PostgreSQL, SCSS modules, TanStack Query, Zustand, and Zod.
+### Multi-tenant Project Management Platform
+
+A full-stack project management application inspired by **Linear** and **Jira**, built to demonstrate production-oriented frontend and backend architecture.
+
+Orbit supports multiple workspaces, projects, issue tracking, role-based access control, realtime updates, notifications, activity history, advanced filtering, and collaborative workflows.
+
+🌐 **Live Demo:** https://saas-application-iiic.onrender.com
 
 ![Orbit workspace](docs/workspace.png)
 
-## Run locally
+---
 
-Requires Node.js 22+ and PostgreSQL 17+. No third-party accounts are required.
+## ✨ Highlights
 
-```sh
+- Multi-tenant workspace architecture
+- Role-based authorization
+- Project and issue management
+- Kanban and list views
+- Drag-and-drop issue workflow
+- Realtime updates with Server-Sent Events
+- Optimistic UI updates
+- Comments, mentions and attachments
+- Notifications and activity history
+- Advanced search and shareable filters
+- Secure session-based authentication
+- PostgreSQL-backed persistence
+- Responsive dark/light interface
+- Unit, integration and E2E testing
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+- **Next.js 16** — App Router and Server Components
+- **React 19**
+- **TypeScript**
+- **SCSS Modules**
+- **TanStack Query** — server-state management and caching
+- **Zustand** — lightweight client UI state
+- **Zod** — runtime validation
+- **dnd-kit** — accessible drag-and-drop interactions
+- **Lucide React** — interface icons
+
+### Backend
+
+- **Next.js Route Handlers**
+- **Node.js**
+- **PostgreSQL**
+- **Raw parameterized SQL**
+- **Server-Sent Events (SSE)**
+- **scrypt password hashing**
+- Cookie-based session authentication
+
+### Testing & Tooling
+
+- **Vitest**
+- **Playwright**
+- **ESLint**
+- **Prettier**
+- **TypeScript**
+- **tsx**
+
+---
+
+## 🚀 Live Application
+
+The production version is deployed on Render:
+
+**https://saas-application-iiic.onrender.com**
+
+You can create an account directly from the application and start with an empty workspace.
+
+The production environment uses a dedicated PostgreSQL database and versioned SQL migrations.
+
+> The service is currently hosted on Render's free infrastructure, so the first request after a period of inactivity may take a little longer while the instance wakes up.
+
+---
+
+## 📦 Run Locally
+
+### Requirements
+
+Make sure you have:
+
+- Node.js 22+
+- PostgreSQL 17+
+- npm
+
+No third-party accounts are required.
+
+### 1. Install dependencies
+
+```bash
 npm ci
+```
+
+### 2. Configure environment variables
+
+Create your local environment file:
+
+```bash
 cp .env.example .env
-# Create an empty PostgreSQL database and set DATABASE_URL in .env.
-# APP_ORIGIN must exactly match the browser origin.
+```
+
+Configure:
+
+```env
+DATABASE_URL=postgresql://...
+APP_ORIGIN=http://localhost:3000
+```
+
+`DATABASE_URL` must point to an existing PostgreSQL database.
+
+`APP_ORIGIN` must exactly match the origin from which the application is accessed.
+
+### 3. Apply database migrations
+
+```bash
 npm run db:migrate
+```
+
+The migration creates the PostgreSQL schema required by Orbit.
+
+### 4. Optional: seed demo data
+
+```bash
 SEED_PASSWORD='choose-a-strong-demo-password' npm run db:seed
+```
+
+The optional seed creates several demo users:
+
+| User | Role |
+| --- | --- |
+| `bella@orbit.local` | Owner |
+| `anna@orbit.local` | Member |
+| `victor@orbit.local` | Member |
+| `james@orbit.local` | Viewer |
+
+All seeded users use the password supplied through `SEED_PASSWORD`.
+
+The seed script refuses to overwrite an existing seeded account.
+
+Alternatively, skip this step and register normally to create a new workspace.
+
+### 5. Start the development server
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:3000. The optional seed creates `bella@orbit.local` (owner), `anna@orbit.local` and `victor@orbit.local` (members), and `james@orbit.local` (viewer). Each uses the supplied seed password. Seed refuses to overwrite an existing seeded account. You can instead register and create an empty workspace.
+Open:
 
-For PostgreSQL with Docker:
-
-```sh
-docker compose up -d
-npm run db:migrate
+```text
+http://localhost:3000
 ```
 
-For a production build:
+---
 
-```sh
+## 🐳 PostgreSQL with Docker
+
+A local PostgreSQL instance can also be started with Docker:
+
+```bash
+docker compose up -d
+npm run db:migrate
+npm run dev
+```
+
+---
+
+## 🏗 Production Build
+
+Create an optimized production build:
+
+```bash
 npm run build
 npm start
 ```
 
-Run behind HTTPS: production cookies are Secure. Supply `DATABASE_URL` and the canonical HTTPS `APP_ORIGIN`. Use a long-running Node service with SSE support; configure proxies to disable response buffering for event streams. The default build uses the verified webpack compiler. `npm run build:turbo` is available for environments that allow Turbopack’s SCSS worker to bind local ports; it failed that permission check in the development sandbox.
+Production requires:
 
-## Product capabilities
+```env
+DATABASE_URL=...
+APP_ORIGIN=https://your-domain.com
+```
 
-- Registration, login/logout, expiring opaque sessions, scrypt password hashing.
-- Multiple workspaces, settings, invitation links, member roles and removal.
-- Projects, archive/settings, project membership and activity.
-- Issues with title, description, status, priority, assignee, reporter, labels and due dates.
-- Paginated list and Kanban views, pointer/keyboard drag support, optimistic moves and rollback.
-- Comments, email mentions (`@anna@example.com`), private attachments and watchers.
-- Workspace SSE updates, unread notification counts, inbox and mark-as-read.
-- Persistent, transactional audit history with before/after field values.
-- Shareable URL filters and Cmd/Ctrl+K command palette with keyboard navigation.
-- Dark/light workspace themes, loading/empty/error states and responsive layout.
+Production cookies use the `Secure` flag and therefore require HTTPS.
 
-Search example:
+Orbit uses long-lived SSE connections for realtime updates. Reverse proxies should be configured to avoid response buffering for event streams.
+
+The default production build uses webpack:
+
+```bash
+npm run build
+```
+
+A Turbopack build is also available:
+
+```bash
+npm run build:turbo
+```
+
+---
+
+# Product Features
+
+## 👤 Authentication
+
+Orbit provides custom session-based authentication with:
+
+- Registration
+- Login and logout
+- Expiring sessions
+- Secure HttpOnly cookies
+- Password hashing with scrypt
+- PostgreSQL-backed rate limiting
+- Origin validation for unsafe requests
+- Server-side authorization
+
+Sessions expire after seven days.
+
+---
+
+## 🏢 Workspaces
+
+Users can create and participate in multiple workspaces.
+
+Each workspace supports:
+
+- Workspace settings
+- Members
+- Invitations
+- Roles and permissions
+- Projects
+- Issues
+- Notifications
+- Activity history
+
+Available roles:
+
+- Owner
+- Admin
+- Member
+- Viewer
+
+---
+
+## 📁 Projects
+
+Projects belong to individual workspaces and support:
+
+- Project names and keys
+- Descriptions
+- Project membership
+- Project settings
+- Archiving
+- Activity tracking
+
+Project membership is organizational and does not act as a private-project security boundary.
+
+---
+
+## 🎫 Issues
+
+Issues support:
+
+- Title
+- Description
+- Status
+- Priority
+- Assignee
+- Reporter
+- Labels
+- Due date
+- Comments
+- Attachments
+- Watchers
+- Activity history
+
+Supported statuses:
+
+```text
+Backlog
+Todo
+In Progress
+In Review
+Done
+```
+
+Supported priorities:
+
+```text
+Urgent
+High
+Medium
+Low
+None
+```
+
+---
+
+## 📋 Kanban Board
+
+Issues can be displayed using a paginated list or interactive Kanban board.
+
+The board includes:
+
+- Pointer drag-and-drop
+- Keyboard drag support
+- Optimistic issue movement
+- Automatic rollback on failure
+- Independent column pagination
+- Realtime synchronization
+
+Dragging an issue changes its status only. Within-column ordering is intentionally not persisted.
+
+---
+
+## 🔎 Advanced Search
+
+Orbit supports structured filters alongside full-text search.
+
+Example:
 
 ```text
 login status:in-progress priority:high assignee:"Anna Chen" label:frontend due:<2026-10-01
 ```
 
-Press Enter to apply search. Unknown filter names and invalid values return validation errors. Full text uses PostgreSQL English stemming. Board columns fetch independently, so a large backlog does not hide work in other statuses. Drag only changes status, not within-column ordering. Open an issue to change status or assignee with the command palette.
+Filters can target:
 
-## Architecture
+- Status
+- Priority
+- Assignee
+- Labels
+- Due dates
+- Search text
 
-See [the architecture decision record](docs/architecture.md) for the design written before implementation and subsequent decisions.
+Search state is stored in URL parameters, which makes filtered views shareable.
+
+Unknown filters and invalid values return validation errors.
+
+PostgreSQL full-text search uses English stemming.
+
+---
+
+## 💬 Collaboration
+
+Issues support collaborative functionality including:
+
+- Comments
+- Email-style mentions
+- Attachments
+- Watchers
+- Notifications
+- Activity history
+
+Example mention:
 
 ```text
-src/app/          Server pages and HTTP route adapters
-src/server/       Authentication, access policy, transactions and domain services
-src/lib/          Shared validation, permissions, search and HTTP contract
-src/components/   Interactive views, dialogs, SCSS modules and query hooks
-db/               Versioned PostgreSQL schema
-scripts/          Migration, sample data, screenshot and scale checks
-tests/            Unit tests and real HTTP/database integration tests
-e2e/              Playwright critical user journey
-docs/             Architecture and actual application screenshot
+@anna@example.com
 ```
 
-Server Components authenticate the protected entry page; route handlers authenticate and authorize every request independently. Client components are used for interactive workspace views. Domain services own business rules, SQL and transaction boundaries. `server-only` prevents importing persistence and authentication into client bundles. Explicit SQL keeps tenancy, locks and query plans visible.
+Attachments are private and associated with individual issues.
 
-### Data model
+---
 
-[The migration](db/001_initial.sql) is the authoritative schema. Users join workspaces through unique `(workspace_id, user_id)` memberships. Projects and issues belong to workspaces. Composite foreign keys prevent assigning an issue to another tenant’s project or member. Projects also have an explicit membership table; project membership is organizational, not a private-project access boundary.
+## 🔔 Notifications
 
-Issues have workspace-allocated numbers, version counters, reporters, optional assignees, text-array labels, and related comments, attachments and watchers. Audit data intentionally survives issue deletion. Sessions and invitations store token digests. Notifications belong to workspace members; removal cascades their notifications and watcher relationships. Role/status/priority checks and unique constraints enforce valid stored values.
+Users receive workspace notifications for relevant activity.
 
-Indexes cover workspace keyset pagination, status/project views, assignees, due dates, GIN full text/labels, session expiry, unread notifications, activity and event cursors. SQL parameters handle all user values. No string-interpolated filter values reach queries.
+Orbit supports:
 
-### Authentication and authorization
+- Unread notification counters
+- Notification inbox
+- Mark-as-read actions
+- Realtime refresh
+- Workspace-scoped notification ownership
 
-Random 256-bit bearer tokens are stored in HttpOnly, SameSite=Lax cookies and SHA-256-digested in PostgreSQL. Production cookies require HTTPS. Sessions expire after seven days; logout deletes the server session. Passwords use salted scrypt and constant-time hash comparison. Login does equivalent password work for unknown users. Account-based rate limits live in PostgreSQL.
+---
 
-| Capability                                 | Owner | Admin | Member | Viewer |
-| ------------------------------------------ | ----- | ----- | ------ | ------ |
-| Read workspace content                     | Yes   | Yes   | Yes    | Yes    |
-| Create/edit/delete issues, comment, upload | Yes   | Yes   | Yes    | No     |
-| Manage projects/settings/members           | Yes   | Yes   | No     | No     |
-| Invite/manage admins                       | Yes   | No    | No     | No     |
-| Remove/demote owner                        | No    | No    | No     | No     |
+## ⚡ Realtime Updates
 
-Every mutation checks permissions on the server. Membership locks prevent revocation racing authorized writes. Owners cannot be removed or demoted; an explicit transfer workflow is a future extension. Invitations are email-bound, expire after seven days, and are consumed once. API errors distinguish 401, 403, 404, 409 and 422. Unsafe routes validate Origin to prevent CSRF, including authentication routes.
+Realtime synchronization uses **Server-Sent Events (SSE)**.
 
-### State and realtime
+The application maintains durable events in PostgreSQL rather than relying on an in-memory event bus.
 
-TanStack Query owns all server data. Zustand owns only command menu visibility and theme. URL parameters own workspace, project, section, search, view and selected issue. Drafts stay in component state.
+This allows multiple Node.js instances to observe the same committed changes.
 
-Optimistic board mutations cancel matching queries, snapshot pages, move the card, restore snapshots on failure, and invalidate on settlement. SQL version checks return 409 on stale edits. The durable event row is committed with the mutation and audit record; an advisory lock orders event allocation through commit. SSE polls every 1.5 seconds, checks session and membership each time, sends heartbeats, and closes after four minutes for a fresh connection. Reconnection invalidates workspace data. No process-local event bus is required, so multiple Node instances observe the same changes.
+The SSE connection:
 
-### Performance
+- polls for new events
+- verifies session validity
+- verifies workspace membership
+- sends heartbeats
+- automatically reconnects
+- invalidates affected workspace data
 
-Issue queries fetch 51 rows to return 50 plus a continuation cursor. Lists and each lane retain up to five pages, bounding the rendered issue set instead of rendering 10,000 rows. Member lookup is server searched and bounded; management, comments, notifications and audit feeds paginate. Queries join display data rather than issuing per-row requests. Database pooling is capped at ten connections per Node process. SQL statements time out after ten seconds. Dialog and command bundles load lazily. Authenticated responses use private/no-store caching.
+This architecture favors portability and correctness over high-fanout realtime performance.
 
-SSE currently invalidates workspace queries broadly (events are coalesced for 100 ms). This is a correctness-first trade-off; large concurrent deployments should use resource-targeted invalidation and a dedicated PostgreSQL LISTEN/NOTIFY or broker fanout process. A 10,000-row dataset does not establish a production concurrency guarantee. Benchmark under your expected connections, data distribution and infrastructure.
+---
 
-## Tests
+# Architecture
 
-```sh
+Detailed architectural decisions are documented in:
+
+**[Architecture Decision Record](docs/architecture.md)**
+
+The main application structure is:
+
+```text
+src/
+├── app/          Server pages and HTTP route adapters
+├── server/       Authentication, authorization, transactions and domain services
+├── lib/          Shared validation, permissions, search and HTTP contracts
+└── components/   Interactive UI, dialogs, query hooks and SCSS modules
+
+db/               Versioned PostgreSQL schema
+scripts/          Database migrations, seed and verification utilities
+tests/            Unit and integration tests
+e2e/              Playwright user journeys
+docs/             Architecture, verification and application screenshots
+```
+
+---
+
+## Application Boundaries
+
+Orbit intentionally separates server and client responsibilities.
+
+### Server Components
+
+Server Components handle protected entry points and server-rendered data where appropriate.
+
+### Route Handlers
+
+API route handlers independently authenticate and authorize incoming requests.
+
+### Domain Services
+
+Domain services own:
+
+- Business rules
+- SQL queries
+- Transaction boundaries
+- Authorization-sensitive operations
+
+The `server-only` package prevents persistence and authentication code from accidentally entering client bundles.
+
+### Client Components
+
+Client Components are reserved for interactive functionality such as:
+
+- Kanban interactions
+- Dialogs
+- Search
+- Command palette
+- Optimistic mutations
+- Theme controls
+
+---
+
+# Database Design
+
+The authoritative database schema lives in:
+
+**[`db/001_initial.sql`](db/001_initial.sql)**
+
+The primary relationships are:
+
+```text
+Users
+  │
+  └── Memberships
+          │
+          ▼
+     Workspaces
+       │     │
+       │     └── Projects
+       │            │
+       │            ▼
+       └───────── Issues
+                     │
+             ┌───────┼─────────┐
+             ▼       ▼         ▼
+          Comments Watchers Attachments
+```
+
+Users join workspaces through unique:
+
+```text
+(workspace_id, user_id)
+```
+
+memberships.
+
+Projects and issues belong to workspaces.
+
+Composite foreign keys prevent an issue from referencing a project, member or other resource belonging to another tenant.
+
+---
+
+## Database Features
+
+Issues contain:
+
+- Workspace-allocated numbers
+- Version counters
+- Reporter references
+- Optional assignees
+- Array-based labels
+- Comments
+- Attachments
+- Watchers
+
+Audit records intentionally survive issue deletion.
+
+Sessions and invitation tokens are stored as cryptographic digests rather than raw tokens.
+
+Database constraints enforce valid roles, statuses and priorities.
+
+---
+
+## Database Indexing
+
+Indexes cover frequently accessed paths including:
+
+- Workspace pagination
+- Issue status
+- Projects
+- Assignees
+- Due dates
+- Labels
+- Full-text search
+- Session expiry
+- Unread notifications
+- Activity feeds
+- Event cursors
+
+GIN indexes are used for labels and PostgreSQL full-text search.
+
+All user-controlled SQL values are parameterized.
+
+No string-interpolated filter values are sent directly to PostgreSQL.
+
+---
+
+# Authentication & Authorization
+
+Authentication uses random 256-bit bearer tokens.
+
+Tokens are:
+
+1. Generated securely
+2. Stored in HttpOnly cookies
+3. SHA-256 hashed
+4. Persisted as digests in PostgreSQL
+
+Production cookies require HTTPS.
+
+Passwords use:
+
+- salted scrypt hashing
+- constant-time hash comparison
+
+Login performs equivalent password work even when the requested account does not exist, reducing account-enumeration timing differences.
+
+Account-based rate limits are stored in PostgreSQL.
+
+---
+
+## Role Permissions
+
+| Capability | Owner | Admin | Member | Viewer |
+| --- | :---: | :---: | :---: | :---: |
+| Read workspace content | ✅ | ✅ | ✅ | ✅ |
+| Create/edit/delete issues | ✅ | ✅ | ✅ | ❌ |
+| Comment and upload attachments | ✅ | ✅ | ✅ | ❌ |
+| Manage projects | ✅ | ✅ | ❌ | ❌ |
+| Manage workspace settings | ✅ | ✅ | ❌ | ❌ |
+| Manage members | ✅ | ✅ | ❌ | ❌ |
+| Invite/manage admins | ✅ | ❌ | ❌ | ❌ |
+| Remove or demote owner | ❌ | ❌ | ❌ | ❌ |
+
+Every mutation validates permissions on the server.
+
+Membership locks prevent permission revocation from racing already-authorized writes.
+
+Owners cannot currently be removed or demoted. Ownership transfer is reserved for a future explicit workflow.
+
+Invitations:
+
+- are bound to email addresses
+- expire after seven days
+- can only be consumed once
+
+API errors distinguish between:
+
+```text
+401 Unauthorized
+403 Forbidden
+404 Not Found
+409 Conflict
+422 Unprocessable Entity
+```
+
+Unsafe routes validate the request origin to reduce CSRF risk.
+
+---
+
+# State Management
+
+Orbit deliberately avoids putting all application state into a single global store.
+
+### TanStack Query
+
+Owns **server state**, including:
+
+- Workspaces
+- Projects
+- Issues
+- Members
+- Comments
+- Notifications
+- Activity
+
+### Zustand
+
+Owns small pieces of **client-only global UI state**, primarily:
+
+- Command palette visibility
+- Theme
+
+### URL State
+
+URL parameters own navigational and shareable state:
+
+- Workspace
+- Project
+- Section
+- Search query
+- View
+- Selected issue
+
+### Local Component State
+
+Temporary drafts and local interactions remain inside individual React components.
+
+---
+
+# Optimistic Updates
+
+Kanban mutations use optimistic updates.
+
+Before sending a mutation, the application:
+
+1. Cancels matching queries
+2. Saves the current query state
+3. Moves the issue optimistically
+4. Sends the server mutation
+5. Restores the previous state if the request fails
+6. Invalidates relevant queries after settlement
+
+Issues contain version counters.
+
+Stale concurrent edits return:
+
+```text
+409 Conflict
+```
+
+This provides optimistic concurrency control without silently overwriting newer changes.
+
+---
+
+# Performance
+
+Orbit includes several strategies for keeping large workspaces manageable.
+
+## Cursor Pagination
+
+Issue queries request:
+
+```text
+51 rows
+```
+
+to return:
+
+```text
+50 items + continuation cursor
+```
+
+This avoids increasingly expensive offset pagination for large datasets.
+
+---
+
+## Bounded Rendering
+
+Lists and individual Kanban lanes retain a limited number of pages.
+
+This prevents a workspace containing thousands of issues from rendering every issue simultaneously.
+
+---
+
+## Query Design
+
+The backend avoids N+1 request patterns by joining required display data where appropriate.
+
+Server-side searches and management views use bounded pagination.
+
+---
+
+## Database Connections
+
+PostgreSQL pooling is capped per Node.js process.
+
+SQL statements have execution timeouts to prevent indefinitely running queries.
+
+---
+
+## Lazy Loading
+
+Heavy interactive UI such as dialogs and command functionality is loaded lazily where appropriate.
+
+Authenticated responses use private/no-store caching.
+
+---
+
+# Testing
+
+Run the main checks with:
+
+```bash
 npm run typecheck
 npm run lint
 npm test
-# With application running against a disposable development/test database:
+```
+
+For integration tests:
+
+```bash
 npm run test:integration
+```
+
+For browser tests:
+
+```bash
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Unit tests exercise permission boundaries, filter parsing, input validation, password verification and token generation. Integration tests exercise actual HTTP and PostgreSQL, including CSRF, tenant isolation, concurrent edits, audit atomicity, single-use invitations and logout revocation. Playwright exercises registration/login, workspace/project creation, invitations, issue assignment, dragging, viewer restrictions, realtime across independent browser contexts, comments/notifications, URL search, keyboard commands and optimistic rollback.
+---
 
-Integration tests are intentionally skipped by ordinary `npm test`; use the explicit integration command. Browser tests require a running server and use unique accounts. They leave their data in the test database for inspection. Never run them against production. Traces/screenshots are retained on failure.
+## Unit Tests
 
-## Security and deployment trade-offs
+Unit tests cover:
 
-This is a working portfolio implementation, not a claim of independently audited production security.
+- Permission boundaries
+- Search filter parsing
+- Input validation
+- Password verification
+- Token generation
 
-- Invitation delivery is a private copyable link; configure an email provider for production. Email verification, password recovery, MFA and owner transfer are not implemented.
-- Attachments are bounded to 5 MB and 20 files per issue, stored in PostgreSQL and downloaded with forced attachment disposition and `nosniff`. Add object storage, quarantine/virus scanning and workspace storage quotas for public deployments.
-- Provision a least-privilege runtime database role. Migrations need a separate owner role. Tenancy is enforced by services/composite constraints, not PostgreSQL RLS.
-- Add trusted-edge IP rate limiting, account abuse controls and observability. The built-in per-account limiter alone does not prevent distributed registration abuse.
-- No HTML/Markdown execution in descriptions or comments; React renders text safely. TLS, CSP rollout and HSTS belong in the deployment configuration and require testing with Next.js script handling.
-- Project/workspace selectors are capped at 200/100. Label catalog/renaming, custom workflows, issue ordering and offline editing are intentional omissions.
-- Sessions have absolute rather than rolling expiry. Schedule cleanup for expired sessions/invites/rate-limit rows, and define event/audit retention and backups with restore drills.
-- SSE favors portability over high fanout efficiency; benchmark before deploying many simultaneous connections. Attachments increase database backup size.
+---
 
-These trade-offs are concrete interview topics: transaction isolation, composite tenant constraints, optimistic concurrency, cache ownership, cursor pagination, and reliable event delivery.
+## Integration Tests
 
-## Verification report
+Integration tests exercise real HTTP requests and PostgreSQL behavior, including:
 
-See [the full check report](docs/verification.md) for executed checks, defects fixed, and remaining production limitations.
+- CSRF protection
+- Tenant isolation
+- Concurrent edits
+- Audit atomicity
+- Single-use invitations
+- Logout session revocation
+
+Integration tests are intentionally excluded from ordinary:
+
+```bash
+npm test
+```
+
+Run them explicitly with:
+
+```bash
+npm run test:integration
+```
+
+---
+
+## End-to-End Tests
+
+Playwright covers critical user journeys including:
+
+- Registration
+- Login
+- Workspace creation
+- Project creation
+- Invitations
+- Issue creation and assignment
+- Kanban dragging
+- Viewer restrictions
+- Realtime synchronization
+- Comments
+- Notifications
+- URL-based search
+- Keyboard commands
+- Optimistic rollback
+
+Browser tests use unique accounts and require a running application.
+
+> Never run automated integration or E2E tests against the production database.
+
+---
+
+# Security Considerations
+
+Orbit is a portfolio application designed with production-oriented security practices, but it is **not presented as an independently audited production system**.
+
+Current security measures include:
+
+- HttpOnly authentication cookies
+- Secure production cookies
+- SameSite=Lax
+- Hashed session tokens
+- scrypt password hashing
+- Constant-time password comparison
+- Origin validation
+- Server-side authorization
+- Parameterized SQL
+- Tenant-aware foreign keys
+- PostgreSQL-backed rate limiting
+- Input validation
+- Attachment size limits
+
+---
+
+# Production Trade-offs
+
+Several capabilities would require additional infrastructure before operating Orbit as a public commercial service.
+
+### Email
+
+Invitation delivery currently uses private copyable links.
+
+A production service should add:
+
+- Email delivery provider
+- Email verification
+- Password recovery
+- MFA
+
+### File Storage
+
+Attachments are currently:
+
+- limited to 5 MB
+- limited to 20 files per issue
+- stored directly in PostgreSQL
+
+A larger deployment should introduce:
+
+- Object storage
+- Malware scanning
+- Workspace storage quotas
+- File lifecycle policies
+
+### Database Security
+
+Production infrastructure should use a least-privilege runtime database role.
+
+Schema migrations should use a separate owner/migration role.
+
+Tenant isolation is currently enforced through domain services and composite database constraints rather than PostgreSQL Row-Level Security.
+
+### Abuse Prevention
+
+A public deployment should add trusted-edge IP rate limiting, monitoring and additional abuse controls.
+
+The built-in account limiter alone is not intended to defend against distributed registration abuse.
+
+### Realtime Scaling
+
+SSE was selected for simplicity, durability and portability.
+
+For high connection counts, resource-targeted invalidation and dedicated PostgreSQL `LISTEN/NOTIFY` or broker-based fanout should be evaluated.
+
+### Maintenance
+
+A long-running production deployment should schedule cleanup for:
+
+- Expired sessions
+- Expired invitations
+- Expired rate-limit entries
+
+It should also define:
+
+- Database backup strategy
+- Restore procedures
+- Audit retention
+- Event retention
+- Monitoring and alerting
+
+---
+
+# Verification
+
+A detailed verification report is available here:
+
+**[Verification Report](docs/verification.md)**
+
+It documents:
+
+- Checks performed
+- Defects discovered and fixed
+- Integration verification
+- Security considerations
+- Remaining production limitations
+
+---
+
+# Design Decisions
+
+Orbit intentionally makes several architectural trade-offs that are useful discussion points:
+
+- **SSE over WebSockets** for one-directional realtime invalidation
+- **TanStack Query over global client state** for server-owned data
+- **Zustand only for UI state**
+- **URL state for shareable navigation and filters**
+- **Raw parameterized SQL** for explicit query and transaction control
+- **Composite foreign keys** for stronger tenant boundaries
+- **Cursor pagination** for scalable issue feeds
+- **Optimistic concurrency** for safe collaborative editing
+- **Durable database events** instead of a process-local event bus
+- **Versioned SQL migrations** for reproducible database deployments
+
+These choices prioritize explicit data ownership, predictable server behavior, tenant isolation and maintainable application boundaries.
+
+---
+
+## 📚 Documentation
+
+Additional technical documentation:
+
+- [Architecture](docs/architecture.md)
+- [Database Migration](db/001_initial.sql)
+- [Verification Report](docs/verification.md)
+
+---
+
+## 📄 License
+
+This project is currently intended as a portfolio and educational project.
+
+---
+
+<p align="center">
+  <strong>Orbit</strong><br />
+  Full-stack project management built with Next.js and PostgreSQL.
+</p>
